@@ -36,7 +36,8 @@ app.MapGet("/api/cars", () =>
     };
 
     return cars;
-}).WithName("GetCars");
+}).WithName("GetCars")
+.WithTags("Cars");
 
 app.MapGet("/api/cars/{id}", (int id) =>
 {
@@ -47,30 +48,97 @@ app.MapGet("/api/cars/{id}", (int id) =>
     };
 
     return car1;
-}).WithName("GetCar");
+}).WithName("GetCar")
+.WithTags("Cars");
 
 app.MapPost("/api/cars", (Car car) =>
 {
     return car;
-}).WithName("CreateCar");
+}).WithName("CreateCar")
+.WithTags("Cars");
 
 app.MapPut("/api/cars/{id}", (Car car) =>
 {
     return car;
-}).WithName("UpdateCar");
+}).WithName("UpdateCar")
+.WithTags("Cars");
 
 app.MapDelete("/api/cars/{id}", (int id) =>
 {
     return $"Car with id: {id} was succesfully deteted";
-}).WithName("DeleteCar");
+}).WithName("DeleteCar")
+.WithTags("Cars");
 
 // Motorbikes endpoints
+
+app.MapGet("/api/motorbikes", () =>
+{
+    var bike1 = new Motorbike
+    {
+        TeamName = "Team A"
+    };
+    var bike2 = new Motorbike
+    {
+        TeamName = "Team B"
+    };
+
+    var bikes = new List<Motorbike>
+    {
+        bike1,
+        bike2
+    };
+
+    return bikes;
+}).WithName("GetMotorbikes")
+.WithTags("Motorbikes");
+
+app.MapGet("/api/motorbikes/{id}", (int id) =>
+{
+    var bike1 = new Motorbike
+    {
+        TeamName = "Team A",
+        Id = id
+    };
+
+    return bike1;
+}).WithName("GetMotorbike")
+.WithTags("Motorbikes");
+
+app.MapPost("/api/motorbikess", (Motorbike bike) =>
+{
+    return bike;
+}).WithName("CreateMotorbike")
+.WithTags("Motorbikes");
+
+app.MapPut("/api/motorbikes/{id}", (Motorbike bike) =>
+{
+    return bike;
+}).WithName("UpdateMotorbike")
+.WithTags("Motorbikes");
+
+app.MapDelete("/api/motorbikes/{id}", (int id) =>
+{
+    return $"Motorbike with id: {id} was succesfully deteted";
+}).WithName("DeleteMotorbike")
+.WithTags("Motorbikes");
 
 app.Run();
 
 // Models
 
 public record Car
+{
+    public int Id { get; set; }
+    public string TeamName { get; set; }
+    public int Speed { get; set; }
+    public double MelfunctionChance { get; set; }
+    public int MelfunctionsOccured { get; set; }
+    public int DistanceCoverdInMiles { get; set; }
+    public bool FinishedRace { get; set; }
+    public int RacedForHours { get; set; }
+}
+
+public record Motorbike
 {
     public int Id { get; set; }
     public string TeamName { get; set; }
