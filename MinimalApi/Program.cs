@@ -1,3 +1,4 @@
+#region builder
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,8 +7,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+#endregion
 
-// Configure the HTTP request pipeline.
+#region app
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -15,9 +17,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+#endregion
 
-// Cars endpoint
-
+#region Cars endpoints
 app.MapGet("/api/cars", () =>
 {
     var car1 = new Car
@@ -68,9 +70,9 @@ app.MapDelete("/api/cars/{id}", (int id) =>
     return $"Car with id: {id} was succesfully deteted";
 }).WithName("DeleteCar")
 .WithTags("Cars");
+#endregion
 
-// Motorbikes endpoints
-
+#region Motorbikes endpoints
 app.MapGet("/api/motorbikes", () =>
 {
     var bike1 = new Motorbike
@@ -121,11 +123,11 @@ app.MapDelete("/api/motorbikes/{id}", (int id) =>
     return $"Motorbike with id: {id} was succesfully deteted";
 }).WithName("DeleteMotorbike")
 .WithTags("Motorbikes");
+#endregion
 
 app.Run();
 
-// Models
-
+#region Models
 public record Car
 {
     public int Id { get; set; }
@@ -149,3 +151,4 @@ public record Motorbike
     public bool FinishedRace { get; set; }
     public int RacedForHours { get; set; }
 }
+#endregion
