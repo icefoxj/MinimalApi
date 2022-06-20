@@ -110,56 +110,83 @@ app.MapDelete("/api/cars/{id}", (int id, RaceDb db) =>
 #endregion
 
 #region Motorbikes endpoints
-app.MapGet("/api/motorbikes", () =>
+
+// Get bikes
+app.MapGet("/api/motorbikes", (RaceDb db) =>
 {
-    var bike1 = new Motorbike
+    var motorbikes = db.Motorbikes.ToList();
+    return Results.Ok(motorbikes);
+})
+    .WithName("GetMotorbikes")
+    .WithTags("Motorbikes");
+
+// Get bike
+app.MapGet("/api/motorbikes/{id}", (int id, RaceDb db) =>
+{
+    var dbMotorbike = db.Motorbikes.FirstOrDefault(x => x.Id == id);
+
+    if (dbMotorbike == null)
     {
-        TeamName = "Team A"
-    };
-    var bike2 = new Motorbike
+        return Results.NotFound();
+    }
+
+    return Results.Ok(dbMotorbike);
+})
+    .WithName("GetMotorbike")
+    .WithTags("Motorbikes");
+
+// Create bike
+app.MapPost("/api/motorbikes", (MotorbikeCreateModel motorbikeModel, RaceDb db) =>
+{
+    var newMotorbike = new Motorbike
     {
-        TeamName = "Team B"
+        TeamName = motorbikeModel.TeamName,
+        Speed = motorbikeModel.Speed,
+        MelfunctionChance = motorbikeModel.MelfunctionChance
     };
+    db.Motorbikes.Add(newMotorbike);
+    db.SaveChanges();
 
-    var bikes = new List<Motorbike>
+    return Results.Ok(newMotorbike);
+})
+    .WithName("CreateMotorbike")
+    .WithTags("Motorbikes");
+
+// Update bike
+app.MapPut("/api/motorbikes/{id}", ([FromQuery] int id, 
+    [FromBodyAttribute] MotorbikeCreateModel motorbikeModel, RaceDb db) =>
+{
+    var dbMotorbike = db.Motorbikes.FirstOrDefault(x => x.Id == id);
+
+    if (dbMotorbike == null)
     {
-        bike1,
-        bike2
-    };
+        return Results.NotFound($"Motorbike with id: {id} isn't found.");
+    }
 
-    return bikes;
-}).WithName("GetMotorbikes")
-.WithTags("Motorbikes");
+    dbMotorbike.TeamName = motorbikeModel.TeamName;
+    dbMotorbike.Speed = motorbikeModel.Speed;
+    dbMotorbike.MelfunctionChance = motorbikeModel.MelfunctionChance;
+    db.SaveChanges();
 
-app.MapGet("/api/motorbikes/{id}", (int id) =>
+    return Results.Ok(dbMotorbike);
+})
+    .WithName("UpdateMotorbike")
+    .WithTags("Motorbikes");
+
+// Delete bike
+app.MapDelete("/api/motorbikes/{id}", (int id, RaceDb db) =>
 {
-    var bike1 = new Motorbike
+    var dbMotorbike = db.Motorbikes.FirstOrDefault(x => x.Id == id);
+    if (dbMotorbike == null)
     {
-        TeamName = "Team A",
-        Id = id
-    };
-
-    return bike1;
-}).WithName("GetMotorbike")
-.WithTags("Motorbikes");
-
-app.MapPost("/api/motorbikess", (Motorbike bike) =>
-{
-    return bike;
-}).WithName("CreateMotorbike")
-.WithTags("Motorbikes");
-
-app.MapPut("/api/motorbikes/{id}", (Motorbike bike) =>
-{
-    return bike;
-}).WithName("UpdateMotorbike")
-.WithTags("Motorbikes");
-
-app.MapDelete("/api/motorbikes/{id}", (int id) =>
-{
-    return $"Motorbike with id: {id} was succesfully deteted";
-}).WithName("DeleteMotorbike")
-.WithTags("Motorbikes");
+        return Results.NotFound($"Motorbike with id: {id} isn't found.");
+    }
+    db.Remove(dbMotorbike);
+    db.SaveChanges();
+    return Results.Ok($"Motorbike with id: {id} was successfuly deleted");
+})
+    .WithName("DeleteMotorbike")
+    .WithTags("Motorbikes");
 #endregion
 
 app.Run();
@@ -195,6 +222,13 @@ public record CarCreateModel
     public int Speed { get; set; }
     public double MelfunctionChance { get; set; }
 }
+
+public class MotorbikeCreateModel
+{
+    public string TeamName { get; set; }
+    public int Speed { get; set; }
+    public double MelfunctionChance { get; set; }
+}
 #endregion
 
 // Persistence
@@ -206,4 +240,6 @@ public class RaceDb : DbContext
     }
 
     public DbSet<Car> Cars { get; set; }
+
+    public DbSet<Motorbike> Motorbikes { get; set; }
 }
