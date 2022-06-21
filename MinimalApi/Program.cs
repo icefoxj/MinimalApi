@@ -236,7 +236,8 @@ app.MapPost("/api/carraces",
             Name = carRaceModel.Name,
             Location = carRaceModel.Location,
             Distance = carRaceModel.Distance,
-            TimeLimit = carRaceModel.TimeLimit
+            TimeLimit = carRaceModel.TimeLimit,
+            Status = "Created"
         };
         db.CarRaces.Add(newCarRace);
         db.SaveChanges();
@@ -307,10 +308,9 @@ app.MapPut("/api/carraces/{id}/start",
         }
     
         carRace.Status = "Started";
-        var finishedRace = CarRaceService.RunRace(carRace);
         db.SaveChanges();
     
-        return Results.Ok(finishedRace);
+        return Results.Ok(carRace);
     })
     .WithName("StartCarRaces")
     .WithTags("CarRaces");
@@ -342,6 +342,138 @@ app.MapPut("/api/carraces/{carRaceId}/addcar/{carId}",
     })
     .WithName("AddCarToCarRaces")
     .WithTags("CarRaces");
+#endregion
+
+#region MotorbikeRaces endpoints
+// Get car races
+app.MapGet("/api/motorbikeraces",
+    (RaceDb db) =>
+    {
+        var motorbikeRaces = db.MotorbikeRaces.ToList();
+        return Results.Ok(motorbikeRaces);
+    })
+    .WithName("GetMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
+
+// Get car race
+app.MapGet("/api/motorbikeraces/{id}",
+    (int id, RaceDb db) =>
+    {
+        var motorbikeRace = db.MotorbikeRaces.FirstOrDefault(motorbikeRace => motorbikeRace.Id == id);
+
+        if (motorbikeRace == null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(motorbikeRace);
+    })
+    .WithName("GetMotorbikeRace")
+    .WithTags("MotorbikeRaces");
+
+// Create car race
+app.MapPost("/api/motorbikeraces",
+    (MotorbikeRaceCreateModel motorbikeRaceModel, RaceDb db) =>
+    {
+        var motorbikeRace = new MotorbikeRace
+        {
+            Name = motorbikeRaceModel.Name,
+            Location = motorbikeRaceModel.Location,
+            Distance = motorbikeRaceModel.Distance,
+            TimeLimit = motorbikeRaceModel.TimeLimit
+        };
+        db.MotorbikeRaces.Add(motorbikeRace);
+        db.SaveChanges();
+        return Results.Ok();
+    })
+    .WithName("CreateMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
+
+// Update car race
+app.MapPut("/api/motorbikeraces/{id}",
+    ([FromQuery] int id, [FromBodyAttribute] MotorbikeRaceCreateModel motorbikeRaceModel, RaceDb db) =>
+    {
+        var dbMotorbikeRace = db.MotorbikeRaces.FirstOrDefault(dbMotorbikeRace => dbMotorbikeRace.Id == id);
+
+        if (dbMotorbikeRace == null)
+        {
+            return Results.NotFound($"MotorbikeRace with id: {id} isn't found, please try another id.");
+        }
+
+        dbMotorbikeRace.Location = motorbikeRaceModel.Location;
+        dbMotorbikeRace.Name = motorbikeRaceModel.Name;
+        dbMotorbikeRace.TimeLimit = motorbikeRaceModel.TimeLimit;
+        dbMotorbikeRace.Distance = motorbikeRaceModel.Distance;
+        db.SaveChanges();
+        return Results.Ok(dbMotorbikeRace);
+    })
+    .WithName("UpdateMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
+
+// Delete car race
+app.MapDelete("/api/motorbikeraces/{id}",
+    (int id, RaceDb db) =>
+    {
+        var dbMotorbikeRace = db.MotorbikeRaces.FirstOrDefault(dbMotorbikeRace => dbMotorbikeRace.Id == id);
+
+        if (dbMotorbikeRace == null)
+        {
+            return Results.NotFound($"Motorbike Race with id: {id} isn't found, please try another id.");
+        }
+        db.Remove(dbMotorbikeRace);
+        db.SaveChanges();
+        return Results.Ok($"Motorbike Race with id: {id} was successfuly deleted");
+    })
+    .WithName("DeleteMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
+
+// Start car race
+app.MapPut("/api/motorbikeraces/{id}/start",
+    (int id, RaceDb db) =>
+    {
+        var dbMotorbikeRace = db.MotorbikeRaces.FirstOrDefault(dbMotorbikeRace => dbMotorbikeRace.Id == id);
+
+        if (dbMotorbikeRace == null)
+        {
+            return Results.NotFound();
+        }
+
+        dbMotorbikeRace.Status = "Started";
+        db.SaveChanges();
+        return Results.Ok(dbMotorbikeRace);
+    })
+    .WithName("StartMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
+
+// Add car to car race
+app.MapPut("/api/motorbikeraces/{motorbikecarRaceId}/addmotorbikecar/{motorbikeId}",
+    (int motorbikeRaceId, int motorbikeId, RaceDb db) =>
+    {
+        var dbMotorbikeRace = db.MotorbikeRaces.SingleOrDefault(dbMotorbikeRace => dbMotorbikeRace.Id == motorbikeRaceId);
+
+        if (dbMotorbikeRace == null)
+        {
+            return Results.NotFound($"Motorbike Race with id: {motorbikeRaceId} not found");
+        }
+
+        if (dbMotorbikeRace.Motorbikes == null)
+        {
+            dbMotorbikeRace.Motorbikes = new List<Motorbike>();
+        }
+
+        var dbMotorbike = db.Motorbikes.SingleOrDefault(dbMotorbike => dbMotorbike.Id == motorbikeId);
+
+        if (dbMotorbike == null)
+        {
+            return Results.NotFound($"Motorbike with id: {motorbikeId} not found");
+        }
+
+        dbMotorbikeRace.Motorbikes.Add(dbMotorbike);
+        db.SaveChanges();
+        return Results.Ok(dbMotorbikeRace);
+    })
+    .WithName("AddMotorbikeToMotorbikeRaces")
+    .WithTags("MotorbikeRaces");
 #endregion
 
 app.Run();
@@ -403,6 +535,26 @@ public record CarRaceCreateModel
     public int Distance { get; set; }
     public int TimeLimit { get; set; }
 }
+
+public record MotorbikeRace
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public int Distance { get; set; }
+    public int TimeLimit { get; set; }
+    public string Status { get; set; }
+    public List<Motorbike> Motorbikes { get; set; } = new List<Motorbike>();
+
+}
+
+public record MotorbikeRaceCreateModel
+{
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public int Distance { get; set; }
+    public int TimeLimit { get; set; }
+}
 #endregion
 
 // Persistence
@@ -418,4 +570,6 @@ public class RaceDb : DbContext
     public DbSet<Motorbike> Motorbikes { get; set; }
 
     public DbSet<CarRace> CarRaces { get; set; }
+
+    public DbSet<MotorbikeRace> MotorbikeRaces { get; set; }
 }
